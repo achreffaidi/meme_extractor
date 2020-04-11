@@ -7,6 +7,8 @@ import 'package:permission/permission.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:tflite/tflite.dart';
 
+import 'Helper/sqlHelper.dart';
+
 class ExtractMemes extends StatefulWidget {
 
 
@@ -28,6 +30,8 @@ class _ExtractMemesState extends State<ExtractMemes> {
   Directory externalDirectory;
   Directory pickedDirectory;
   int selected = 0 ;
+  MemesProvider _memesProvider = new MemesProvider();
+  bool _database_is_ready = false ;
 
   void process(File file) async{
     var temp = file.path.split(".") ;
@@ -59,8 +63,21 @@ class _ExtractMemesState extends State<ExtractMemes> {
     memes = new List() ;
     lemes = new List() ;
     init();
+    initDataBase();
+
     super.initState();
   }
+
+  void initDataBase()async{
+    _memesProvider.open().then((x){
+      _database_is_ready = true ;
+      setState(() {
+
+      });
+    });
+  }
+
+
   Future<void> getPermissions() async {
     final permissions =
     await Permission.getPermissionsStatus([PermissionName.Storage]);
@@ -139,7 +156,9 @@ class _ExtractMemesState extends State<ExtractMemes> {
                 Positioned(
                     top: 2,
                     right: 2,
-                    child: Card(child: Checkbox(onChanged: (v){
+                    child: Card(
+                        color: Colors.deepPurpleAccent,
+                        child: Checkbox(onChanged: (v){
                       if(v){
                         selected++;
                       }else{
@@ -164,12 +183,20 @@ class _ExtractMemesState extends State<ExtractMemes> {
     return Container(
       child:
       Scaffold(
+        backgroundColor: Color.lerp(Colors.black, Colors.deepPurple, 0.3),
+
         appBar: AppBar(title: Text("Extractor"),),
         body:
         Center(
           child: folder==null?
               GestureDetector(
-                child: Icon(Icons.folder_open,size: 100,color: Colors.grey,),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(Icons.folder_open,size: 100,color: Colors.grey,),
+                    Text("Select Folder",style: TextStyle(fontSize: 30 , color: Colors.grey),)
+                  ],
+                ),
                 onTap: _selectFolder,
               )
           :
@@ -192,7 +219,7 @@ class _ExtractMemesState extends State<ExtractMemes> {
                     },
                   ),
                 ),
-                RaisedButton.icon(onPressed: null, icon: Icon(Icons.save_alt), label: Padding(
+                RaisedButton.icon(onPressed: _saveButton, icon: Icon(Icons.save_alt), label: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text("Save ( "+selected.toString()+" Meme )",style: TextStyle(fontSize: 30),),
                 ))
@@ -243,14 +270,39 @@ class _ExtractMemesState extends State<ExtractMemes> {
 
 
 
+  int itemCount = 0 ;
+  void _saveButton() async {
+
+    if(_database_is_ready){
+
+      for(Item item in memes)
+      if(item.checked) await _memesProvider.insert(
+          Meme(
+              item.file.path
+          )).then((Meme meme){
+        print("saved under id : "+meme.id.toString());
+      });
+      print("Finish Saving") ;
+
+    }
+
+  }
 }
 
 
 class Item {
   File file ;
   bool checked = true  ;
+  int id ;
 
-  Item(this.file);
+  Item(File file){
+    this.file = file ;
+  }
+   Item.notChecked(File file , int id ){
+    this.file =file ;
+    this.checked = false;
+    this.id = id ;
+  }
 
   void click(){
     checked = ! checked ;

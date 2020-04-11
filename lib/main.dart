@@ -10,6 +10,8 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:tflite/tflite.dart';
 
 import 'ExtractMemesUI.dart';
+import 'Helper/SavedMemesUI.dart';
+import 'aboutmeUI.dart';
 
 void main() => runApp(MyApp());
 
@@ -29,9 +31,10 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
+        backgroundColor: Colors.blueGrey
       ),
-      home: MyHomePage(title: 'Made with ♥ by Ashraf'),
+      home: MyHomePage(title: 'MyMeme'),
     );
   }
 }
@@ -104,39 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   return folder;
                   });
             }));
-    /*
-    memes = new List() ;
-    lemes = new List() ;
-    List<AssetEntity> assetList = await PhotoPicker.pickAsset(context: context,
-    maxSelected: 500,
-      pickType: PickType.onlyImage,
 
-    );
-    for(AssetEntity x in assetList) {
-      await x.file.then((File file) async{
-        var recognitions = await Tflite.runModelOnImage(
-            path: file.path,   // required
-            imageMean: 0.0,   // defaults to 117.0
-            imageStd: 255.0,  // defaults to 1.0
-            numResults: 2,    // defaults to 5
-            threshold: 0.2,   // defaults to 0.1
-            asynch: true      // defaults to true
-        );
-        if(recognitions[0]["index"]==0){
-          lemes.add(file);
-        }else{
-          memes.add(file);
-        }
-
-        setState(() {
-
-        });
-      });
-
-
-    }
-    /// Use assetList to do something.
-    */
     return externalDirectory ;
   }
 
@@ -154,25 +125,37 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    double pictWidth = MediaQuery.of(context).size.width*0.6 ;
+
     return Scaffold(
+      backgroundColor: Color.lerp(Colors.black, Colors.deepPurple, 0.3),
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
+        actions: <Widget>[
+          IconButton(icon: Icon(Icons.info , color: Colors.white,), onPressed: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AboutMe()),
+            );
+
+          })
+        ],
         title: Text(widget.title),
       ),
       body :
       Center(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            RaisedButton.icon(onPressed: _extractMemes, icon: Icon(Icons.folder), label: Text("Extract Memes")) ,
-            RaisedButton.icon(onPressed: null, icon: Icon(Icons.folder), label: Text("My Memes")) ,
+            Image.asset("assets/title.png" ,  width: pictWidth,fit: BoxFit.fitWidth,),
+            Image.asset("assets/face.png" , height: pictWidth , width: pictWidth,fit: BoxFit.fill,),
+            RaisedButton.icon(onPressed: _extractMemes, icon: Icon(Icons.folder,size: 30,), label: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text("Extract Memes" , style: TextStyle(fontSize: 30),),
+            )) ,
+            RaisedButton.icon(onPressed: _savedMemes, icon: Icon(Icons.favorite,size: 30,), label: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text("My Memes", style: TextStyle(fontSize: 30),)) ,)
           ],
         ),
       ),
@@ -187,6 +170,15 @@ class _MyHomePageState extends State<MyHomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => ExtractMemes()),
+      );
+
+  }
+
+  void _savedMemes() async {
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SavedMemesUI()),
       );
 
   }
