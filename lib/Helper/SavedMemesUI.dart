@@ -60,7 +60,7 @@ class _SavedMemesUIState extends State<SavedMemesUI> {
         ],
         title: Text("Selected : "+selected.toString(),style: TextStyle(color: Colors.white),),
       ) :  AppBar(
-        title: Text("Saved Memes") ,
+        title: Text("Saved Memes : "+memes.length.toString()+" Meme") ,
 
       ),
       body: _getBody(),
@@ -75,9 +75,7 @@ class _SavedMemesUIState extends State<SavedMemesUI> {
 
           crossAxisCount: 3, crossAxisSpacing: 2.0, mainAxisSpacing: 2.0),
       itemBuilder: (BuildContext context, int index){
-
         return Container(
-
             child: getItem(memes[index]));
       },
     ),
@@ -89,7 +87,7 @@ class _SavedMemesUIState extends State<SavedMemesUI> {
 
      _memesProvider.getAllMemes().then((List<Meme> list){
 
-      for(Meme m in list){
+      if(list!=null)for(Meme m in list){
         try{
           File f = File(m.path);
           memes.add(Item.notChecked(f,m.id));

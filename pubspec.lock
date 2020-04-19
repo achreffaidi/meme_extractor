@@ -158,6 +158,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.8.0+1"
+  percent_indicator:
+    dependency: "direct main"
+    description:
+      name: percent_indicator
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.1+1"
   permission:
     dependency: "direct main"
     description:
@@ -165,6 +172,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.7"
+  permission_handler:
+    dependency: "direct main"
+    description:
+      name: permission_handler
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "4.3.0"
   petitparser:
     dependency: transitive
     description:
@@ -172,20 +186,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.4.0"
-  photo:
-    dependency: "direct main"
-    description:
-      name: photo
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.4.8"
-  photo_manager:
-    dependency: transitive
-    description:
-      name: photo_manager
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.4.8"
   progress_dialog:
     dependency: "direct main"
     description:
@@ -275,6 +275,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.4"
+  toast:
+    dependency: "direct main"
+    description:
+      name: toast
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.5"
   typed_data:
     dependency: transitive
     description:

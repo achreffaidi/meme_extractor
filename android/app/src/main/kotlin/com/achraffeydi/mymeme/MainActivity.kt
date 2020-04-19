@@ -1,4 +1,4 @@
-package com.example.tflite_test
+package com.achraffeydi.mymeme
 
 import android.os.Bundle
 import io.flutter.app.FlutterActivity

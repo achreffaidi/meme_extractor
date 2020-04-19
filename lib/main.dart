@@ -1,16 +1,16 @@
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:folder_picker/folder_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission/permission.dart';
-import 'package:photo/photo.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:progress_dialog/progress_dialog.dart';
 import 'package:tflite/tflite.dart';
 
 import 'ExtractMemesUI.dart';
 import 'Helper/SavedMemesUI.dart';
+import 'Helper/sqlHelper.dart';
 import 'aboutmeUI.dart';
 
 void main() => runApp(MyApp());
@@ -20,17 +20,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'MyMeme',
+
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
+
         primarySwatch: Colors.deepPurple,
         backgroundColor: Colors.blueGrey
       ),
@@ -42,15 +35,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
 
@@ -60,13 +44,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  File _image;
+
   Directory externalDirectory;
   Directory pickedDirectory;
-  Future getImage() async {
-   //TODO ffff
-  }
+  List<Item> memes ;
+  MemesProvider _memesProvider = new MemesProvider();
+
 
   String title = "loading" ;
   String res ;
@@ -83,14 +66,21 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   @override
   void initState() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    memes = new List() ;
+    initDataBase().then((x){
+      loadMemes().then((x){
+        setState(() {
 
+        });
+      });
+    });
     load();
+
     super.initState();
   }
-
-
-
-
 
   Future<Directory> pickAssets() async {
 
@@ -126,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     double pictWidth = MediaQuery.of(context).size.width*0.6 ;
-
+    double buttonWidth = MediaQuery.of(context).size.width*0.6 ;
     return Scaffold(
       backgroundColor: Color.lerp(Colors.black, Colors.deepPurple, 0.3),
       appBar: AppBar(
@@ -149,13 +139,18 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Image.asset("assets/title.png" ,  width: pictWidth,fit: BoxFit.fitWidth,),
             Image.asset("assets/face.png" , height: pictWidth , width: pictWidth,fit: BoxFit.fill,),
-            RaisedButton.icon(onPressed: _extractMemes, icon: Icon(Icons.folder,size: 30,), label: Padding(
+
+
+            RaisedButton.icon(onPressed: _extractMemes, icon: Icon(Icons.folder,size: 30,color: Colors.deepOrangeAccent,), label: Padding(
               padding: const EdgeInsets.all(10.0),
-              child: Text("Extract Memes" , style: TextStyle(fontSize: 30),),
+              child: SizedBox(width:  buttonWidth , child: Center(child: Text("Extract Memes" , style: TextStyle(fontSize: 30),))),
             )) ,
-            RaisedButton.icon(onPressed: _savedMemes, icon: Icon(Icons.favorite,size: 30,), label: Padding(
+            RaisedButton.icon(onPressed: _savedMemes, icon: Center(child: Icon(Icons.favorite,size: 30,color: Colors.redAccent,)), label: Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Text("My Memes", style: TextStyle(fontSize: 30),)) ,)
+                child: SizedBox(width:  buttonWidth , child: Center(child: Text("My Memes", style: TextStyle(fontSize: 30),))) ,),),
+            RaisedButton.icon(onPressed: memes.isEmpty?null: _randomMemes, icon: Icon(Icons.all_inclusive,size: 30,color: Colors.pink,), label: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SizedBox(width:  buttonWidth , child: Center(child: Text("Pick Random", style: TextStyle(fontSize: 30),))) ,),)
           ],
         ),
       ),
@@ -164,13 +159,18 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-
   void _extractMemes() async {
 
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => ExtractMemes()),
-      );
+      ).then((v){
+        loadMemes().then((x){
+          setState(() {
+
+          });
+        });
+      });
 
   }
 
@@ -183,5 +183,162 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
 
+  Future initDataBase()async{
+    await _memesProvider.open().then((x){
+      loadMemes();
+      setState(() {
 
+      });
+    });
+  }
+
+
+  Future loadMemes() async {
+
+    _memesProvider.getAllMemes().then((List<Meme> list){
+
+     if(list!=null) for(Meme m in list){
+        try{
+          File f = File(m.path);
+          memes.add(Item.notChecked(f,m.id));
+          setState(() {
+
+          });
+        }catch(e){
+
+        }
+
+      }
+
+    });
+
+  }
+
+  void _randomMemes() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => CustomRandomMemeDialog(
+         memes
+      ),
+    );
+  }
+}
+
+class CustomRandomMemeDialog extends StatefulWidget {
+
+
+  List<Item> memes ;
+
+  CustomRandomMemeDialog(
+      this.memes,
+      ) ;
+
+  @override
+  _CustomRandomMemeDialogState createState() => _CustomRandomMemeDialogState(memes);
+}
+
+class _CustomRandomMemeDialogState extends State<CustomRandomMemeDialog> {
+
+
+  List<Item> memes ;
+  Item current ;
+  var randomizer;
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    Item item = current;
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(40),
+      ),
+      elevation: 0.0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        height: MediaQuery.of(context).size.height*0.7,
+        padding: EdgeInsets.all(
+            20.0
+        ),
+        decoration: new BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.rectangle,
+          borderRadius: BorderRadius.circular(40),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10.0,
+              offset: const Offset(0.0, 10.0),
+            ),
+          ],
+        ),
+        child: Stack(
+          // To make the card compact
+          children: <Widget>[
+            Center(
+              child: Card(child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.file(item.file,width: MediaQuery.of(context).size.width*0.7,fit: BoxFit.fitWidth,),
+              )),
+            ),
+            Positioned(
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      GestureDetector(
+                          onTap: (){
+                            generateRandom();
+                            setState(() {
+
+                            });
+                          },
+                          child: Icon(Icons.refresh,size: 40,)),
+                      Container(color: Colors.grey,width: 3,height: 40,),
+                      GestureDetector(
+                          onTap: (){
+                            _shareOneFile(item.file);
+                          },
+                          child: Icon(Icons.share,size: 40,))
+                    ],),
+                ),
+              ),
+            )
+
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _shareOneFile(File file) async {
+
+    Map<String,Uint8List> map = new Map();
+
+
+    map[file.path.split("/").last]=file.readAsBytesSync();
+
+    await Share.files(
+        'Share with Friends',
+        map,
+        '*/*');
+
+  }
+
+  void generateRandom() {
+    var num = randomizer.nextInt(memes.length);
+    current = memes.elementAt(num);
+  }
+
+  _CustomRandomMemeDialogState(List<Item> items){
+    memes = items ;
+    randomizer = new Random();
+    generateRandom() ;
+  }
 }
